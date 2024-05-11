@@ -11,12 +11,6 @@ pipeline {
                git url: 'https://github.com/vaibhavdikha2206/interconnected'
             }
         }
-        stage('Install'){
-            steps {
-               sh 'mvn install'
-               sh 'docker build -t interconnected .'
-            }
-        }
 
         stage('Clean Up'){
             steps {
@@ -32,6 +26,13 @@ pipeline {
                 catchError {
                     sh 'docker rmi interconnected'
                 }
+            }
+        }
+
+        stage('Install'){
+            steps {
+               sh 'mvn install'
+               sh 'docker build -t interconnected .'
             }
         }
 
