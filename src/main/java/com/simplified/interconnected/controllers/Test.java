@@ -11,7 +11,7 @@ import java.io.IOException;
 public class Test {
 
 
-    @GetMapping("/test")
+    @GetMapping("/test2")
     public String getString() throws IOException {
         return "Test App";
     }
