@@ -8,7 +8,7 @@ pipeline {
         }
         stage('Cloning'){
             steps {
-               git url: 'https://github.com/vaibhavdikha2206/swapiapp-spring'
+               git url: 'https://github.com/vaibhavdikha2206/interconnected'
             }
         }
         stage('Install'){
@@ -17,7 +17,8 @@ pipeline {
                sh 'docker build -t interconnected .'
             }
         }
-        stage('Deploy'){
+
+        stage('Clean Up'){
             steps {
                 catchError {
                     sh 'docker stop interconnected'
@@ -27,6 +28,15 @@ pipeline {
                 catchError {
                     sh 'docker rm interconnected'
                 }
+
+                catchError {
+                    sh 'docker rmi interconnected'
+                }
+            }
+        }
+
+        stage('Deploy'){
+            steps {
                 sh 'docker run --name interconnected -p 8080:8080 interconnected'
             }
         }
