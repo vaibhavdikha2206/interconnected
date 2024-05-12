@@ -14,7 +14,7 @@ public class Test {
     @GetMapping("/test2")
     public String getString() throws IOException {
         System.out.println("sending response");
-        return "Test App New";
+        return "Test App2";
     }
 
 }
