@@ -11,10 +11,10 @@ import java.io.IOException;
 public class Test {
 
 
-    @GetMapping("/test")
+    @GetMapping("/test3")
     public String getString() throws IOException {
         System.out.println("sending response");
-        return "Test App";
+        return "Test App 3";
     }
 
 }
