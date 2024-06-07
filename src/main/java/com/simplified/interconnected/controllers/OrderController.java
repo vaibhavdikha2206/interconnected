@@ -5,18 +5,24 @@ import com.razorpay.PaymentLink;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.simplified.interconnected.dto.ApiResponse;
+import com.simplified.interconnected.dto.OrderCreateRequestDTO;
 import com.simplified.interconnected.dto.PaymentLinkRequestDto;
 import com.simplified.interconnected.dto.PaymentLinkResponseDto;
+import com.simplified.interconnected.models.OrderEntity;
+import com.simplified.interconnected.repository.OrderRepository;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/payments")
-public class PaymentController {
+@RequestMapping("/api/order")
+public class OrderController {
+    // reference: https://youtu.be/EEwngSnv8LU?si=81UHU4rCf09NI3GU
+    private final OrderRepository orderRepository;
 
     @Value("${razorpay.api.key}")
     String apiKey;
@@ -24,7 +30,24 @@ public class PaymentController {
     @Value("${razorpay.api.secret}")
     String apiSecret;
 
-    @PostMapping("pay")
+    @Autowired
+    public OrderController(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
+    }
+
+    @PostMapping("create")
+    public ResponseEntity<PaymentLinkResponseDto> createOrder(@RequestBody OrderCreateRequestDTO orderCreateRequestDTO,
+                                                              @RequestHeader ("Authorization") String jwt) {
+        OrderEntity order = orderRepository.getById(paymentLinkRequestDto.getOrderId());
+        order.setPaymentId(paymentLinkResponseDto.getPaymentLinkId());
+        order.setPaymentStatus("PENDING");
+        order.setOrderStatus("PENDING");
+        orderRepository.save(order);
+
+        return new ResponseEntity<>(paymentLinkResponseDto, HttpStatus.CREATED);
+    }
+
+@PostMapping("pay")
     public ResponseEntity<PaymentLinkResponseDto> createPaymentLink(@RequestBody PaymentLinkRequestDto paymentLinkRequestDto,
                                                                     @RequestHeader ("Authorization") String jwt) throws RazorpayException {
         try {
@@ -35,10 +58,17 @@ public class PaymentController {
             PaymentLink paymentLink = razorpayClient.paymentLink.create(paymentLinkRequest);
 
             PaymentLinkResponseDto paymentLinkResponseDto = new PaymentLinkResponseDto();
-            paymentLinkResponseDto.setPayment_link_id(paymentLink.get("id"));
-            paymentLinkResponseDto.setPayment_link_url(paymentLink.get("short_url"));
+            paymentLinkResponseDto.setPaymentLinkId(paymentLink.get("id"));
+            paymentLinkResponseDto.setPaymentLinkUrl(paymentLink.get("short_url"));
 
-            return new ResponseEntity<PaymentLinkResponseDto>(paymentLinkResponseDto, HttpStatus.CREATED);
+            // Save payment id for order
+            OrderEntity order = orderRepository.getById(paymentLinkRequestDto.getOrderId());
+            order.setPaymentId(paymentLinkResponseDto.getPaymentLinkId());
+            order.setPaymentStatus("PENDING");
+            order.setOrderStatus("PENDING");
+            orderRepository.save(order);
+
+            return new ResponseEntity<>(paymentLinkResponseDto, HttpStatus.CREATED);
         } catch (RazorpayException e) {
             throw new RazorpayException(e.getMessage());
         }
@@ -65,19 +95,22 @@ public class PaymentController {
     }
 
     @PostMapping("redirect")
-    public ResponseEntity<ApiResponse> redirect(@RequestBody PaymentLinkRequestDto paymentLinkRequestDto,
+    public ResponseEntity<ApiResponse> redirect(@RequestParam(name="payment_id") String paymentId,
                                                 @RequestHeader ("Authorization") String jwt) throws RazorpayException {
         try {
             RazorpayClient razorpayClient = new RazorpayClient(apiKey, apiSecret);
             Payment payment = razorpayClient.payments.fetch(paymentId);
             if(payment.get("status").equals("captured")) {
-                // make changes to order data payment id, payment status completed and status placed.
-                // api response with message and status
-                return new ResponseEntity<PaymentLinkResponseDto>(paymentLinkResponseDto, HttpStatus.CREATED);
+                // Save payment id for order
+                OrderEntity order = orderRepository.findByPaymentId(paymentId).get();
+                order.setPaymentStatus("COMPLETED");
+                order.setOrderStatus("PLACED");
+                orderRepository.save(order);
+                return new ResponseEntity<>(new ApiResponse("Order placed", true), HttpStatus.CREATED);
             }
-
         } catch (RazorpayException e) {
             throw new RazorpayException(e.getMessage());
         }
+        return null;
     }
 }
