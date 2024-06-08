@@ -8,7 +8,9 @@ import com.simplified.interconnected.dto.ApiResponse;
 import com.simplified.interconnected.dto.OrderCreateRequestDTO;
 import com.simplified.interconnected.dto.PaymentLinkRequestDto;
 import com.simplified.interconnected.dto.PaymentLinkResponseDto;
+import com.simplified.interconnected.models.ExpertEntity;
 import com.simplified.interconnected.models.OrderEntity;
+import com.simplified.interconnected.repository.ExpertsRepository;
 import com.simplified.interconnected.repository.OrderRepository;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
     // reference: https://youtu.be/EEwngSnv8LU?si=81UHU4rCf09NI3GU
     private final OrderRepository orderRepository;
+    private final ExpertsRepository expertsRepository;
 
     @Value("${razorpay.api.key}")
     String apiKey;
@@ -31,23 +34,22 @@ public class OrderController {
     String apiSecret;
 
     @Autowired
-    public OrderController(OrderRepository orderRepository) {
+    public OrderController(OrderRepository orderRepository, ExpertsRepository expertsRepository) {
         this.orderRepository = orderRepository;
+        this.expertsRepository = expertsRepository;
     }
 
-    @PostMapping("create")
-    public ResponseEntity<PaymentLinkResponseDto> createOrder(@RequestBody OrderCreateRequestDTO orderCreateRequestDTO,
-                                                              @RequestHeader ("Authorization") String jwt) {
-        OrderEntity order = orderRepository.getById(paymentLinkRequestDto.getOrderId());
-        order.setPaymentId(paymentLinkResponseDto.getPaymentLinkId());
-        order.setPaymentStatus("PENDING");
-        order.setOrderStatus("PENDING");
-        orderRepository.save(order);
-
-        return new ResponseEntity<>(paymentLinkResponseDto, HttpStatus.CREATED);
+    @GetMapping("expertServices")
+    public ResponseEntity<ExpertEntity> getExpertServices(@PathVariable Long expertId) {
+        try {
+            ExpertEntity expert = expertsRepository.getById(expertId);
+            return new ResponseEntity<>(expert, HttpStatus.OK);
+        } catch (Exception e)
+        {
+            return new ResponseEntity<>(null, HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
-
-@PostMapping("pay")
+        @PostMapping("pay")
     public ResponseEntity<PaymentLinkResponseDto> createPaymentLink(@RequestBody PaymentLinkRequestDto paymentLinkRequestDto,
                                                                     @RequestHeader ("Authorization") String jwt) throws RazorpayException {
         try {
@@ -61,7 +63,9 @@ public class OrderController {
             paymentLinkResponseDto.setPaymentLinkId(paymentLink.get("id"));
             paymentLinkResponseDto.setPaymentLinkUrl(paymentLink.get("short_url"));
 
-            // Save payment id for order
+            // get product details from product repo
+            // use that data to create the order entity
+            // Save new order
             OrderEntity order = orderRepository.getById(paymentLinkRequestDto.getOrderId());
             order.setPaymentId(paymentLinkResponseDto.getPaymentLinkId());
             order.setPaymentStatus("PENDING");

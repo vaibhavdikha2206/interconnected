@@ -6,21 +6,21 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 @Entity
+@Table(name = "services")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductEntity {
+public class ServiceEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private Long interviewerId;
-
-    @Column(nullable = false)
-    private String name;
+    private String serviceName;
 
     @Column(nullable = false)
     private Double price;
+
+    private Integer duration;
 }

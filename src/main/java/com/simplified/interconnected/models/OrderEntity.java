@@ -41,7 +41,7 @@ public class OrderEntity {
     private String orderStatus;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    private ProductEntity product;
+    @JoinColumn(name = "service_id", nullable = false)
+    private ServiceEntity service;
 }
 
