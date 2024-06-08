@@ -1,0 +1,40 @@
+-- Create the Experts table
+CREATE TABLE Experts (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    other_details TEXT
+);
+
+-- Create the TimeSlots table
+CREATE TABLE Timeslots (
+    id SERIAL PRIMARY KEY,
+    day_of_week VARCHAR(9) CHECK (day_of_week IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')),
+    start_time TIME,
+    end_time TIME
+);
+
+-- Create the Services table
+CREATE TABLE Services (
+    id SERIAL PRIMARY KEY,
+    service_name VARCHAR(100),
+    duration INT,  -- Duration in minutes
+    price DECIMAL(10, 2)
+);
+
+-- Create the ExpertServices table
+CREATE TABLE expert_service (
+    id SERIAL PRIMARY KEY,
+    expert_id INT,
+    service_id INT,
+    FOREIGN KEY (expert_id) REFERENCES Experts(id),
+    FOREIGN KEY (service_id) REFERENCES Services(id)
+);
+
+-- Create the ExpertTimeSlots table
+CREATE TABLE expert_timeslot (
+    id SERIAL PRIMARY KEY,
+    expert_id INT,
+    timeslot_id INT,
+    FOREIGN KEY (expert_id) REFERENCES Experts(id),
+    FOREIGN KEY (timeslot_id) REFERENCES TimeSlots(id)
+);
