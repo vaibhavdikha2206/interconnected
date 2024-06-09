@@ -38,3 +38,18 @@ CREATE TABLE expert_timeslot (
     FOREIGN KEY (expert_id) REFERENCES Experts(id),
     FOREIGN KEY (timeslot_id) REFERENCES TimeSlots(id)
 );
+
+-- Create the orders table
+CREATE TABLE Orders (
+    id SERIAL PRIMARY KEY,
+    payment_id VARCHAR(255),
+    customer_email VARCHAR(255) NOT NULL,
+    cost DOUBLE PRECISION NOT NULL,
+    order_timestamp TIMESTAMP NOT NULL SET DEFAULT CURRENT_TIMESTAMP,
+    payment_status VARCHAR(255) NOT NULL,
+    order_status VARCHAR(255) NOT NULL,
+    service_id BIGINT NOT NULL,
+    service_timeslot TIMESTAMP NOT NULL;
+    FOREIGN KEY (service_id) REFERENCES Services(id)
+);
+

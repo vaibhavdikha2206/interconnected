@@ -75,6 +75,7 @@ public class OrderController {
             // Save new order
             OrderEntity order = new OrderEntity();
             order.setService(service);
+            order.setServiceTimeslot(paymentLinkRequestDto.getServiceTimeslot()); // Verify if timeslot is valid
             order.setCost(service.getPrice());
             order.setCustomerEmail(paymentLinkRequestDto.getCustomerEmail());
             order.setPaymentId(paymentLinkResponseDto.getPaymentLinkId());
