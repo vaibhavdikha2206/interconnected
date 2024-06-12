@@ -5,6 +5,7 @@ import com.razorpay.PaymentLink;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.simplified.interconnected.dto.ApiResponse;
+import com.simplified.interconnected.dto.ExpertDetailsResponse;
 import com.simplified.interconnected.dto.PaymentLinkRequestDto;
 import com.simplified.interconnected.dto.PaymentLinkResponseDto;
 import com.simplified.interconnected.models.ExpertEntity;
@@ -13,6 +14,7 @@ import com.simplified.interconnected.models.ServiceEntity;
 import com.simplified.interconnected.repository.ExpertRepository;
 import com.simplified.interconnected.repository.OrderRepository;
 import com.simplified.interconnected.repository.ServiceRepository;
+import com.simplified.interconnected.service.ExpertService;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,9 @@ public class OrderController {
     private final ExpertRepository expertRepository;
     private final ServiceRepository serviceRepository;
 
+    @Autowired
+    private ExpertService expertService;
+
     @Value("${razorpay.api.key}")
     String apiKey;
 
@@ -45,15 +50,9 @@ public class OrderController {
         this.serviceRepository = serviceRepository;
     }
 
-    @GetMapping("expertServices")
-    public ResponseEntity<ExpertEntity> getExpertServices(@PathVariable Long expertId) {
-        try {
-            ExpertEntity expert = expertRepository.getById(expertId);
-            return new ResponseEntity<>(expert, HttpStatus.OK);
-        } catch (Exception e)
-        {
-            return new ResponseEntity<>(null, HttpStatus.UNPROCESSABLE_ENTITY);
-        }
+    @GetMapping("/{expertId}/details")
+    public ExpertDetailsResponse getExpertDetails(@PathVariable Long expertId) {
+        return expertService.getExpertDetails(expertId);
     }
         @PostMapping("pay")
     public ResponseEntity<PaymentLinkResponseDto> createPaymentLink(@RequestBody PaymentLinkRequestDto paymentLinkRequestDto,
@@ -75,7 +74,7 @@ public class OrderController {
             // Save new order
             OrderEntity order = new OrderEntity();
             order.setService(service);
-            order.setServiceTimeslot(paymentLinkRequestDto.getServiceTimeslot()); // Verify if timeslot is valid
+            order.setServiceTimeSlot(paymentLinkRequestDto.getServiceTimeSlot()); // Verify if timeslot is valid
             order.setCost(service.getPrice());
             order.setCustomerEmail(paymentLinkRequestDto.getCustomerEmail());
             order.setPaymentId(paymentLinkResponseDto.getPaymentLinkId());

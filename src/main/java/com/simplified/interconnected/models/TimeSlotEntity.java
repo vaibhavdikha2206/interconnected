@@ -3,12 +3,11 @@ package com.simplified.interconnected.models;
 import com.simplified.interconnected.utils.DayOfWeek;
 import jakarta.persistence.*;
 import lombok.Data;
-import java.util.List;
 
 @Entity
 @Table(name = "timeslots")
 @Data
-public class TimeslotEntity {
+public class TimeSlotEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

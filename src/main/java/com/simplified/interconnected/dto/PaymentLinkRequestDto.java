@@ -10,5 +10,5 @@ public class PaymentLinkRequestDto {
     private String customerName;
     private String customerEmail;
     private long serviceId;
-    private LocalDateTime serviceTimeslot;
+    private LocalDateTime serviceTimeSlot;
 }

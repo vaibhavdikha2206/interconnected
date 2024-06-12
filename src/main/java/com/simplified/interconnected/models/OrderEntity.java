@@ -45,6 +45,6 @@ public class OrderEntity {
     private ServiceEntity service;
 
     @Column(nullable = false)
-    private LocalDateTime serviceTimeslot;
+    private LocalDateTime serviceTimeSlot;
 }
 

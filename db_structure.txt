@@ -6,7 +6,7 @@ CREATE TABLE Experts (
 );
 
 -- Create the TimeSlots table
-CREATE TABLE Timeslots (
+CREATE TABLE TimeSlots (
     id SERIAL PRIMARY KEY,
     day_of_week VARCHAR(9) CHECK (day_of_week IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')),
     start_time TIME,

@@ -28,6 +28,6 @@ public class ExpertEntity {
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "expert_timeslot", joinColumns = @JoinColumn(name = "expert_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "timeslot_id", referencedColumnName = "id"))
-    private List<TimeslotEntity> timeslots = new ArrayList<>();
+    private List<TimeSlotEntity> timeslots = new ArrayList<>();
 }
 
