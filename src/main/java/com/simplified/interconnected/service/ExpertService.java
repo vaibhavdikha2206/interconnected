@@ -6,12 +6,14 @@ import com.simplified.interconnected.models.ServiceEntity;
 import com.simplified.interconnected.models.TimeSlotEntity;
 import com.simplified.interconnected.repository.ExpertServiceRepository;
 import com.simplified.interconnected.repository.ExpertTimeSlotRepository;
+import com.simplified.interconnected.repository.OrderRepository;
 import com.simplified.interconnected.utils.DayOfWeek;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,9 @@ public class ExpertService {
 
     @Autowired
     private ExpertTimeSlotRepository expertTimeSlotRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     public List<ServiceEntity> getServicesByExpertId(Long expertId) {
         return expertServiceRepository.findServicesByExpertId(expertId);
@@ -61,5 +66,25 @@ public class ExpertService {
         List<ServiceEntity> services = getServicesByExpertId(expertId);
         List<TimeSlotWithDate> timeSlots = getNextAvailableTimeSlotsByExpertId(expertId);
         return new ExpertDetailsResponse(services, timeSlots);
+    }
+
+    // VALIDATION CODE
+    public boolean isValidServiceTimeSlot(Long expertId, LocalDateTime serviceTimeSlot) {
+        List<TimeSlotEntity> expertTimeSlots = expertTimeSlotRepository.findAllTimeSlotsByExpertId(expertId);
+        // Fix this. Use logs. This might not work.
+        DayOfWeek dayOfWeek = DayOfWeek.valueOf(serviceTimeSlot.getDayOfWeek().toString());
+        LocalTime startTime = serviceTimeSlot.toLocalTime();
+
+        return expertTimeSlots.stream()
+                .anyMatch(slot -> slot.getDayOfWeek() == dayOfWeek &&
+                        slot.getStartTime().equals(startTime));
+    }
+
+    public boolean isTimeSlotAvailable(Long serviceId, LocalDateTime serviceTimeSlot) {
+        return !orderRepository.existsByServiceIdAndServiceTimeSlot(serviceId, serviceTimeSlot);
+    }
+
+    public boolean validateOrderRequest(Long expertId, Long serviceId, LocalDateTime serviceTimeSlot) {
+        return isValidServiceTimeSlot(expertId, serviceTimeSlot) && isTimeSlotAvailable(serviceId, serviceTimeSlot);
     }
 }

@@ -54,9 +54,19 @@ public class OrderController {
     public ExpertDetailsResponse getExpertDetails(@PathVariable Long expertId) {
         return expertService.getExpertDetails(expertId);
     }
-        @PostMapping("pay")
+
+    @PostMapping("/{expertId}/validate-order")
+    public boolean validateOrder(@PathVariable Long expertId, @RequestBody PaymentLinkRequestDto requestDto) {
+        return expertService.validateOrderRequest(expertId, requestDto.getServiceId(), requestDto.getServiceTimeSlot());
+    }
+
+    @PostMapping("pay")
     public ResponseEntity<PaymentLinkResponseDto> createPaymentLink(@RequestBody PaymentLinkRequestDto paymentLinkRequestDto,
                                                                     @RequestHeader ("Authorization") String jwt) throws RazorpayException {
+        if(!expertService.validateOrderRequest(paymentLinkRequestDto.getExpertId(), paymentLinkRequestDto.getServiceId(), paymentLinkRequestDto.getServiceTimeSlot()))
+        {
+            return new ResponseEntity<>(null, HttpStatus.NOT_ACCEPTABLE);
+        }
         try {
             ServiceEntity service = serviceRepository.getById(paymentLinkRequestDto.getServiceId());
             RazorpayClient razorpayClient = new RazorpayClient(apiKey, apiSecret);
