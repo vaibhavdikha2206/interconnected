@@ -44,6 +44,10 @@ public class OrderEntity {
     @JoinColumn(name = "service_id", nullable = false)
     private ServiceEntity service;
 
+    @ManyToOne
+    @JoinColumn(name = "expert_id", nullable = false)
+    private ExpertEntity expert;
+
     @Column(nullable = false)
     private LocalDateTime serviceTimeSlot;
 }

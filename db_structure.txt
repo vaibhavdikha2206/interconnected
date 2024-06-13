@@ -49,7 +49,9 @@ CREATE TABLE Orders (
     payment_status VARCHAR(255) NOT NULL,
     order_status VARCHAR(255) NOT NULL,
     service_id BIGINT NOT NULL,
+    expert_id BIGINT NOT NULL,
     service_timeslot TIMESTAMP NOT NULL;
     FOREIGN KEY (service_id) REFERENCES Services(id)
+    FOREIGN KEY (expert_id) REFERENCES Experts(id)
 );
 

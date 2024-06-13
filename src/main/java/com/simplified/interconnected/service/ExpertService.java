@@ -44,7 +44,7 @@ public class ExpertService {
                 .collect(Collectors.groupingBy(TimeSlotEntity::getDayOfWeek, TreeMap::new, Collectors.toList()));
 
         // Check each of the next 14 days (to ensure we get 10 slots)
-        for (int i = 0; i < 14 && upcomingTimeSlots.size() < 10; i++) {
+        for (int i = 0; i < 30 && upcomingTimeSlots.size() < 10; i++) {
             LocalDate date = now.toLocalDate().plusDays(i);
 
             java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
@@ -80,11 +80,11 @@ public class ExpertService {
                         slot.getStartTime().equals(startTime));
     }
 
-    public boolean isTimeSlotAvailable(Long serviceId, LocalDateTime serviceTimeSlot) {
-        return !orderRepository.existsByServiceIdAndServiceTimeSlot(serviceId, serviceTimeSlot);
+    public boolean isTimeSlotAvailable(Long expertId, LocalDateTime serviceTimeSlot) {
+        return !orderRepository.existsByExpertIdAndServiceTimeSlot(expertId, serviceTimeSlot);
     }
 
-    public boolean validateOrderRequest(Long expertId, Long serviceId, LocalDateTime serviceTimeSlot) {
-        return isValidServiceTimeSlot(expertId, serviceTimeSlot) && isTimeSlotAvailable(serviceId, serviceTimeSlot);
+    public boolean validateOrderRequest(Long expertId, LocalDateTime serviceTimeSlot) {
+        return isValidServiceTimeSlot(expertId, serviceTimeSlot) && isTimeSlotAvailable(expertId, serviceTimeSlot);
     }
 }
