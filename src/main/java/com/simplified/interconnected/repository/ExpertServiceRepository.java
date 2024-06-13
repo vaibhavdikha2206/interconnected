@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface ExpertServiceRepository extends JpaRepository<ServiceEntity, Long> {
 
-    @Query("SELECT es.service FROM ExpertServiceEntity es WHERE es.expert.expertId = :expertId")
+    @Query("SELECT es.service FROM ExpertServiceEntity es WHERE es.expert.id = :expertId")
     List<ServiceEntity> findServicesByExpertId(@Param("expertId") Long expertId);
 }
 
