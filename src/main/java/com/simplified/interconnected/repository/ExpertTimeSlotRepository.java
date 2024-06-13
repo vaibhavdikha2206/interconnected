@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface ExpertTimeSlotRepository extends JpaRepository<TimeSlotEntity, Long> {
 
-    @Query("SELECT et.timeslot FROM ExpertTimeSlot et WHERE et.expert.expertId = :expertId ORDER BY et.timeSlot.dayOfWeek, et.timeSlot.startTime")
+    @Query("SELECT et.timeSlot FROM ExpertTimeSlotEntity et WHERE et.expert.id = :expertId ORDER BY et.timeSlot.dayOfWeek, et.timeSlot.startTime")
     List<TimeSlotEntity> findAllTimeSlotsByExpertId(@Param("expertId") Long expertId);
 }

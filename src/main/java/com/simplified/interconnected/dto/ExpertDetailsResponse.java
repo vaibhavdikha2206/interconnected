@@ -1,16 +1,19 @@
 package com.simplified.interconnected.dto;
 
+import com.simplified.interconnected.models.ExpertEntity;
 import com.simplified.interconnected.models.ServiceEntity;
+import lombok.Data;
 
 import java.util.List;
 
+@Data
 public class ExpertDetailsResponse {
 
-    private List<ServiceEntity> services;
+    private ExpertEntity expert;
     private List<TimeSlotWithDate> timeSlots;
 
-    public ExpertDetailsResponse(List<ServiceEntity> services, List<TimeSlotWithDate> timeSlots) {
-        this.services = services;
+    public ExpertDetailsResponse(ExpertEntity expert, List<TimeSlotWithDate> timeSlots) {
+        this.expert = expert;
         this.timeSlots = timeSlots;
     }
 

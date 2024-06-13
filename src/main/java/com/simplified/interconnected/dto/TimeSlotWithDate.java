@@ -2,10 +2,14 @@ package com.simplified.interconnected.dto;
 
 import com.simplified.interconnected.models.TimeSlotEntity;
 import com.simplified.interconnected.utils.DayOfWeek;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+@Data
 public class TimeSlotWithDate {
 
     private DayOfWeek dayOfWeek;

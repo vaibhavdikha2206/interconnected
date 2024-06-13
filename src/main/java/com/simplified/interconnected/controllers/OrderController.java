@@ -31,7 +31,6 @@ import java.time.ZoneId;
 public class OrderController {
     // reference: https://youtu.be/EEwngSnv8LU?si=81UHU4rCf09NI3GU
     private final OrderRepository orderRepository;
-    private final ExpertRepository expertRepository;
     private final ServiceRepository serviceRepository;
 
     @Autowired
@@ -46,13 +45,17 @@ public class OrderController {
     @Autowired
     public OrderController(OrderRepository orderRepository, ExpertRepository expertRepository, ServiceRepository serviceRepository) {
         this.orderRepository = orderRepository;
-        this.expertRepository = expertRepository;
         this.serviceRepository = serviceRepository;
     }
 
     @GetMapping("/{expertId}/details")
-    public ExpertDetailsResponse getExpertDetails(@PathVariable Long expertId) {
-        return expertService.getExpertDetails(expertId);
+    public ResponseEntity<ExpertDetailsResponse> getExpertDetails(@PathVariable Long expertId) {
+        try {
+            ExpertDetailsResponse response = expertService.getExpertDetails(expertId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
     @PostMapping("/{expertId}/validate-order")
@@ -61,8 +64,8 @@ public class OrderController {
     }
 
     @PostMapping("pay")
-    public ResponseEntity<PaymentLinkResponseDto> createPaymentLink(@RequestBody PaymentLinkRequestDto paymentLinkRequestDto,
-                                                                    @RequestHeader ("Authorization") String jwt) throws RazorpayException {
+    @ResponseBody
+    public ResponseEntity<PaymentLinkResponseDto> createPaymentLink(@RequestBody PaymentLinkRequestDto paymentLinkRequestDto) throws RazorpayException {
         if(!expertService.validateOrderRequest(paymentLinkRequestDto.getExpertId(), paymentLinkRequestDto.getServiceTimeSlot()))
         {
             return new ResponseEntity<>(null, HttpStatus.NOT_ACCEPTABLE);
@@ -79,9 +82,6 @@ public class OrderController {
             paymentLinkResponseDto.setPaymentLinkId(paymentLink.get("id"));
             paymentLinkResponseDto.setPaymentLinkUrl(paymentLink.get("short_url"));
 
-            // get product details from product repo
-            // use that data to create the order entity
-            // Save new order
             OrderEntity order = new OrderEntity();
             order.setService(service);
             order.setServiceTimeSlot(paymentLinkRequestDto.getServiceTimeSlot()); // Verify if timeslot is valid
@@ -120,6 +120,7 @@ public class OrderController {
     }
 
     @PostMapping("redirect")
+    @ResponseBody
     public ResponseEntity<ApiResponse> redirect(@RequestParam(name="payment_id") String paymentId,
                                                 @RequestHeader ("Authorization") String jwt) throws RazorpayException {
         try {

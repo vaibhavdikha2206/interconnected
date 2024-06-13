@@ -2,8 +2,10 @@ package com.simplified.interconnected.service;
 
 import com.simplified.interconnected.dto.ExpertDetailsResponse;
 import com.simplified.interconnected.dto.TimeSlotWithDate;
+import com.simplified.interconnected.models.ExpertEntity;
 import com.simplified.interconnected.models.ServiceEntity;
 import com.simplified.interconnected.models.TimeSlotEntity;
+import com.simplified.interconnected.repository.ExpertRepository;
 import com.simplified.interconnected.repository.ExpertServiceRepository;
 import com.simplified.interconnected.repository.ExpertTimeSlotRepository;
 import com.simplified.interconnected.repository.OrderRepository;
@@ -21,6 +23,9 @@ import java.util.stream.Collectors;
 public class ExpertService {
 
     @Autowired
+    private ExpertRepository expertRepository;
+
+    @Autowired
     private ExpertServiceRepository expertServiceRepository;
 
     @Autowired
@@ -33,8 +38,7 @@ public class ExpertService {
         return expertServiceRepository.findServicesByExpertId(expertId);
     }
 
-    public List<TimeSlotWithDate> getNextAvailableTimeSlotsByExpertId(Long expertId) {
-        List<TimeSlotEntity> timeSlots = expertTimeSlotRepository.findAllTimeSlotsByExpertId(expertId);
+    public List<TimeSlotWithDate> getNextAvailableTimeSlotsByExpertId(List<TimeSlotEntity> timeSlots) {
         LocalDateTime now = LocalDateTime.now();
 
         List<TimeSlotWithDate> upcomingTimeSlots = new ArrayList<>();
@@ -49,7 +53,7 @@ public class ExpertService {
 
             java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
 
-            List<TimeSlotEntity> slotsForDay = slotsByDay.getOrDefault(dayOfWeek, Collections.emptyList());
+            List<TimeSlotEntity> slotsForDay = slotsByDay.getOrDefault(DayOfWeek.valueOf(dayOfWeek.toString()), Collections.emptyList());
             for (TimeSlotEntity slot : slotsForDay) {
                 LocalDateTime slotDateTime = LocalDateTime.of(date, slot.getStartTime());
                 if (slotDateTime.isAfter(now)) {
@@ -62,10 +66,17 @@ public class ExpertService {
         return upcomingTimeSlots;
     }
 
-    public ExpertDetailsResponse getExpertDetails(Long expertId) {
-        List<ServiceEntity> services = getServicesByExpertId(expertId);
-        List<TimeSlotWithDate> timeSlots = getNextAvailableTimeSlotsByExpertId(expertId);
-        return new ExpertDetailsResponse(services, timeSlots);
+    public ExpertDetailsResponse getExpertDetails(Long expertId) throws Exception {
+        Optional<ExpertEntity> optionalExpert = expertRepository.findById(expertId);
+        if (optionalExpert.isPresent()) {
+            ExpertEntity expert = optionalExpert.get();
+            List<TimeSlotWithDate> timeSlots = getNextAvailableTimeSlotsByExpertId(expert.getTimeslots());
+            return new ExpertDetailsResponse( expert, timeSlots);
+        } else {
+            // Handle the case where the expert is not found
+            // For example, throw a custom exception or return null
+            throw new Exception("Expert not found with id " + expertId);
+        }
     }
 
     // VALIDATION CODE
