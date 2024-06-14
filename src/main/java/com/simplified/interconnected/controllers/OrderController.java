@@ -32,6 +32,7 @@ public class OrderController {
     // reference: https://youtu.be/EEwngSnv8LU?si=81UHU4rCf09NI3GU
     private final OrderRepository orderRepository;
     private final ServiceRepository serviceRepository;
+    private final ExpertRepository expertRepository;
 
     @Autowired
     private ExpertService expertService;
@@ -46,6 +47,7 @@ public class OrderController {
     public OrderController(OrderRepository orderRepository, ExpertRepository expertRepository, ServiceRepository serviceRepository) {
         this.orderRepository = orderRepository;
         this.serviceRepository = serviceRepository;
+        this.expertRepository = expertRepository;
     }
 
     @GetMapping("/{expertId}/details")
@@ -72,6 +74,7 @@ public class OrderController {
         }
         try {
             ServiceEntity service = serviceRepository.getById(paymentLinkRequestDto.getServiceId());
+            ExpertEntity expert = expertRepository.getById(paymentLinkRequestDto.getExpertId());
             RazorpayClient razorpayClient = new RazorpayClient(apiKey, apiSecret);
 
             JSONObject paymentLinkRequest = createPaymentLinkRequest(paymentLinkRequestDto, service.getPrice());
@@ -79,15 +82,15 @@ public class OrderController {
             PaymentLink paymentLink = razorpayClient.paymentLink.create(paymentLinkRequest);
 
             PaymentLinkResponseDto paymentLinkResponseDto = new PaymentLinkResponseDto();
-            paymentLinkResponseDto.setPaymentLinkId(paymentLink.get("id"));
             paymentLinkResponseDto.setPaymentLinkUrl(paymentLink.get("short_url"));
 
             OrderEntity order = new OrderEntity();
             order.setService(service);
+            order.setExpert(expert);
             order.setServiceTimeSlot(paymentLinkRequestDto.getServiceTimeSlot()); // Verify if timeslot is valid
             order.setCost(service.getPrice());
             order.setCustomerEmail(paymentLinkRequestDto.getCustomerEmail());
-            order.setPaymentId(paymentLinkResponseDto.getPaymentLinkId());
+            order.setPaymentId(paymentLink.get("id"));
             order.setPaymentStatus("PENDING");
             order.setOrderStatus("PENDING");
             order.setOrderTimestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
@@ -110,7 +113,7 @@ public class OrderController {
 
         JSONObject notify = new JSONObject();
         notify.put("sms", false);
-        customer.put("email", false);
+        notify.put("email", false);
 
         paymentLinkRequest.put("customer", customer);
         paymentLinkRequest.put("notify", notify);
@@ -121,21 +124,21 @@ public class OrderController {
 
     @PostMapping("redirect")
     @ResponseBody
-    public ResponseEntity<ApiResponse> redirect(@RequestParam(name="payment_id") String paymentId,
-                                                @RequestHeader ("Authorization") String jwt) throws RazorpayException {
+    public ResponseEntity<ApiResponse> redirect(@RequestParam(name="razorpay_payment_id") String paymentId,
+                                                @RequestParam(name="razorpay_payment_link_id") String paymentLinkId) throws RazorpayException {
         try {
             RazorpayClient razorpayClient = new RazorpayClient(apiKey, apiSecret);
             Payment payment = razorpayClient.payments.fetch(paymentId);
             if(payment.get("status").equals("captured")) {
                 // Save payment id for order
-                OrderEntity order = orderRepository.findByPaymentId(paymentId).get();
+                OrderEntity order = orderRepository.findByPaymentId(paymentLinkId).get();
                 order.setPaymentStatus("COMPLETED");
                 order.setOrderStatus("PLACED");
                 orderRepository.save(order);
                 return new ResponseEntity<>(new ApiResponse("Order placed", true), HttpStatus.CREATED);
             }
         } catch (RazorpayException e) {
-            throw new RazorpayException(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
         return null;
     }
