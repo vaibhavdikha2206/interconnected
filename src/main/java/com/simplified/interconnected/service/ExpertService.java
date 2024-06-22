@@ -34,8 +34,8 @@ public class ExpertService {
     @Autowired
     private OrderRepository orderRepository;
 
-    public List<ServiceEntity> getServicesByExpertId(Long expertId) {
-        return expertServiceRepository.findServicesByExpertId(expertId);
+    public List<ExpertEntity> getAllExperts() {
+        return expertRepository.findAll();
     }
 
     public List<TimeSlotWithDate> getNextAvailableTimeSlotsByExpertId(Long expertId, List<TimeSlotEntity> timeSlots) {
