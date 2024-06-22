@@ -50,21 +50,6 @@ public class OrderController {
         this.expertRepository = expertRepository;
     }
 
-    @GetMapping("/{expertId}/details")
-    public ResponseEntity<ExpertDetailsResponse> getExpertDetails(@PathVariable Long expertId) {
-        try {
-            ExpertDetailsResponse response = expertService.getExpertDetails(expertId);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-    }
-
-    @PostMapping("/{expertId}/validate-order")
-    public boolean validateOrder(@PathVariable Long expertId, @RequestBody PaymentLinkRequestDto requestDto) {
-        return expertService.validateOrderRequest(expertId, requestDto.getServiceTimeSlot());
-    }
-
     @PostMapping("pay")
     @ResponseBody
     public ResponseEntity<PaymentLinkResponseDto> createPaymentLink(@RequestBody PaymentLinkRequestDto paymentLinkRequestDto) throws RazorpayException {
