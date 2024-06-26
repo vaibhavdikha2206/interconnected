@@ -80,22 +80,22 @@ public class ExpertService {
     }
 
     // VALIDATION CODE
-    public boolean isValidServiceTimeSlot(Long expertId, LocalDateTime serviceTimeSlot) {
+    public boolean isValidServiceTimeSlot(Long expertId, LocalDateTime serviceTimeslot) {
         List<TimeSlotEntity> expertTimeSlots = expertTimeSlotRepository.findAllTimeSlotsByExpertId(expertId);
         // Fix this. Use logs. This might not work.
-        DayOfWeek dayOfWeek = DayOfWeek.valueOf(serviceTimeSlot.getDayOfWeek().toString());
-        LocalTime startTime = serviceTimeSlot.toLocalTime();
+        DayOfWeek dayOfWeek = DayOfWeek.valueOf(serviceTimeslot.getDayOfWeek().toString());
+        LocalTime startTime = serviceTimeslot.toLocalTime();
 
         return expertTimeSlots.stream()
                 .anyMatch(slot -> slot.getDayOfWeek() == dayOfWeek &&
                         slot.getStartTime().equals(startTime));
     }
 
-    public boolean isTimeSlotAvailable(Long expertId, LocalDateTime serviceTimeSlot) {
-        return !orderRepository.existsByExpertIdAndServiceTimeSlot(expertId, serviceTimeSlot);
+    public boolean isTimeSlotAvailable(Long expertId, LocalDateTime serviceTimeslot) {
+        return !orderRepository.existsByExpertIdAndServiceTimeslot(expertId, serviceTimeslot);
     }
 
-    public boolean validateOrderRequest(Long expertId, LocalDateTime serviceTimeSlot) {
-        return isValidServiceTimeSlot(expertId, serviceTimeSlot) && isTimeSlotAvailable(expertId, serviceTimeSlot);
+    public boolean validateOrderRequest(Long expertId, LocalDateTime serviceTimeslot) {
+        return isValidServiceTimeSlot(expertId, serviceTimeslot) && isTimeSlotAvailable(expertId, serviceTimeslot);
     }
 }

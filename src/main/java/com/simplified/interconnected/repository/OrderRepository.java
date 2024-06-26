@@ -12,6 +12,6 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     Optional<OrderEntity> findByPaymentId(String paymentId);
 
-    @Query("SELECT COUNT(o) > 0 FROM OrderEntity o WHERE o.expert.id = :expertId AND o.serviceTimeSlot = :serviceTimeSlot")
-    boolean existsByExpertIdAndServiceTimeSlot(@Param("expertId") Long expertId, @Param("serviceTimeSlot") LocalDateTime serviceTimeSlot);
+    @Query("SELECT COUNT(o) > 0 FROM OrderEntity o WHERE o.expert.id = :expertId AND o.serviceTimeslot = :serviceTimeslot")
+    boolean existsByExpertIdAndServiceTimeslot(@Param("expertId") Long expertId, @Param("serviceTimeslot") LocalDateTime serviceTimeSlot);
 }
