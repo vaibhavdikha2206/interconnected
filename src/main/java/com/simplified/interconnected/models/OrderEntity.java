@@ -47,7 +47,7 @@ public class OrderEntity {
     @JoinColumn(name = "expert_id", nullable = false)
     private ExpertEntity expert;
 
-    @Column(nullable = false)
+    @Column(name = "service_timeslot", nullable = false)
     private LocalDateTime serviceTimeSlot;
 
     @Column(name = "created_at", nullable = false, updatable = false)
