@@ -52,7 +52,7 @@ public class OrderController {
     @PostMapping("pay")
     @ResponseBody
     public ResponseEntity<PaymentLinkResponseDto> createPaymentLink(@RequestBody PaymentLinkRequestDto paymentLinkRequestDto) throws RazorpayException {
-        if(!expertService.validateOrderRequest(paymentLinkRequestDto.getExpertId(), paymentLinkRequestDto.getServiceTimeSlot()))
+        if(!expertService.validateOrderRequest(paymentLinkRequestDto.getExpertId(), paymentLinkRequestDto.getServiceTimeslot()))
         {
             return new ResponseEntity<>(null, HttpStatus.NOT_ACCEPTABLE);
         }
@@ -71,7 +71,7 @@ public class OrderController {
             OrderEntity order = new OrderEntity();
             order.setService(service);
             order.setExpert(expert);
-            order.setServiceTimeslot(paymentLinkRequestDto.getServiceTimeSlot()); // Verify if timeslot is valid
+            order.setServiceTimeslot(paymentLinkRequestDto.getServiceTimeslot()); // Verify if timeslot is valid
             order.setCost(service.getPrice());
             order.setCustomerEmail(paymentLinkRequestDto.getCustomerEmail());
             order.setPaymentId(paymentLink.get("id"));
