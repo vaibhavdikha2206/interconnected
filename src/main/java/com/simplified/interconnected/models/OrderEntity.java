@@ -48,7 +48,7 @@ public class OrderEntity {
     private ExpertEntity expert;
 
     @Column(name = "service_timeslot", nullable = false)
-    private LocalDateTime serviceTimeSlot;
+    private LocalDateTime serviceTimeslot;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreatedDate

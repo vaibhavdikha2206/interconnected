@@ -5,7 +5,6 @@ import com.razorpay.PaymentLink;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.simplified.interconnected.dto.ApiResponse;
-import com.simplified.interconnected.dto.ExpertDetailsResponse;
 import com.simplified.interconnected.dto.PaymentLinkRequestDto;
 import com.simplified.interconnected.dto.PaymentLinkResponseDto;
 import com.simplified.interconnected.models.ExpertEntity;
@@ -72,7 +71,7 @@ public class OrderController {
             OrderEntity order = new OrderEntity();
             order.setService(service);
             order.setExpert(expert);
-            order.setServiceTimeSlot(paymentLinkRequestDto.getServiceTimeSlot()); // Verify if timeslot is valid
+            order.setServiceTimeslot(paymentLinkRequestDto.getServiceTimeSlot()); // Verify if timeslot is valid
             order.setCost(service.getPrice());
             order.setCustomerEmail(paymentLinkRequestDto.getCustomerEmail());
             order.setPaymentId(paymentLink.get("id"));
