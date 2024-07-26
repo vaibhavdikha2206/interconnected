@@ -55,3 +55,15 @@ CREATE TABLE Orders (
     FOREIGN KEY (expert_id) REFERENCES Experts(id)
 );
 
+CREATE TABLE skills (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE expert_skill (
+    expert_id BIGINT NOT NULL,
+    skill_id BIGINT NOT NULL,
+    PRIMARY KEY (expert_id, skill_id),
+    FOREIGN KEY (expert_id) REFERENCES experts(id) ON DELETE CASCADE,
+    FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
+);
