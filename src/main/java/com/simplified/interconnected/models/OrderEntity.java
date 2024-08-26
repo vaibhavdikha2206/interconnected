@@ -22,13 +22,16 @@ public class OrderEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String paymentId;
+    private String razorpayOrderId;
 
     @Column(nullable = false)
     private String customerEmail;
 
     @Column(nullable = false)
     private Double cost;
+
+    @Column(nullable = false)
+    private String currency;
 
     @Column(nullable = false)
     private LocalDateTime orderTimestamp;

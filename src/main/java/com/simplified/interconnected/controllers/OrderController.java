@@ -1,12 +1,9 @@
 package com.simplified.interconnected.controllers;
 
-import com.razorpay.Payment;
-import com.razorpay.PaymentLink;
-import com.razorpay.RazorpayClient;
-import com.razorpay.RazorpayException;
+import com.razorpay.*;
 import com.simplified.interconnected.dto.ApiResponse;
-import com.simplified.interconnected.dto.PaymentLinkRequestDto;
-import com.simplified.interconnected.dto.PaymentLinkResponseDto;
+import com.simplified.interconnected.dto.OrderRequestDto;
+import com.simplified.interconnected.dto.OrderResponseDto;
 import com.simplified.interconnected.models.ExpertEntity;
 import com.simplified.interconnected.models.OrderEntity;
 import com.simplified.interconnected.models.ServiceEntity;
@@ -33,6 +30,8 @@ public class OrderController {
     private final ServiceRepository serviceRepository;
     private final ExpertRepository expertRepository;
 
+    private static final String currency = "INR";
+
     @Autowired
     private ExpertService expertService;
 
@@ -51,78 +50,75 @@ public class OrderController {
 
     @PostMapping("pay")
     @ResponseBody
-    public ResponseEntity<PaymentLinkResponseDto> createPaymentLink(@RequestBody PaymentLinkRequestDto paymentLinkRequestDto) throws RazorpayException {
-        if(!expertService.validateOrderRequest(paymentLinkRequestDto.getExpertId(), paymentLinkRequestDto.getServiceTimeslot()))
+    public ResponseEntity<OrderResponseDto> createPaymentLink(@RequestBody OrderRequestDto orderRequestDto) throws RazorpayException {
+        if(!expertService.validateOrderRequest(orderRequestDto.getExpertId(), orderRequestDto.getServiceTimeslot()))
         {
             return new ResponseEntity<>(null, HttpStatus.NOT_ACCEPTABLE);
         }
         try {
-            ServiceEntity service = serviceRepository.getById(paymentLinkRequestDto.getServiceId());
-            ExpertEntity expert = expertRepository.getById(paymentLinkRequestDto.getExpertId());
+            ServiceEntity service = serviceRepository.getById(orderRequestDto.getServiceId());
+            ExpertEntity expert = expertRepository.getById(orderRequestDto.getExpertId());
             RazorpayClient razorpayClient = new RazorpayClient(apiKey, apiSecret);
 
-            JSONObject paymentLinkRequest = createPaymentLinkRequest(paymentLinkRequestDto, service.getPrice());
+            JSONObject rpOrderRequest = createRazorpayOrderRequest(orderRequestDto, service.getPrice());
 
-            PaymentLink paymentLink = razorpayClient.paymentLink.create(paymentLinkRequest);
+            Order rpOrder = razorpayClient.orders.create(rpOrderRequest);
 
-            PaymentLinkResponseDto paymentLinkResponseDto = new PaymentLinkResponseDto();
-            paymentLinkResponseDto.setPaymentLinkUrl(paymentLink.get("short_url"));
+            // Add code for error/failure case
+
+            OrderResponseDto orderResponseDto = new OrderResponseDto();
+            orderResponseDto.setRazorpayOrderId(rpOrder.get("id"));
 
             OrderEntity order = new OrderEntity();
             order.setService(service);
             order.setExpert(expert);
-            order.setServiceTimeslot(paymentLinkRequestDto.getServiceTimeslot()); // Verify if timeslot is valid
+            order.setServiceTimeslot(orderRequestDto.getServiceTimeslot()); // Verify if timeslot is valid
             order.setCost(service.getPrice());
-            order.setCustomerEmail(paymentLinkRequestDto.getCustomerEmail());
-            order.setPaymentId(paymentLink.get("id"));
+            order.setCurrency(currency);
+            order.setCustomerEmail(orderRequestDto.getCustomerEmail());
+            order.setRazorpayOrderId(orderResponseDto.getRazorpayOrderId());
             order.setPaymentStatus("PENDING");
             order.setOrderStatus("PENDING");
             order.setOrderTimestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
             orderRepository.save(order);
 
-            return new ResponseEntity<>(paymentLinkResponseDto, HttpStatus.CREATED);
+            return new ResponseEntity<>(orderResponseDto, HttpStatus.CREATED);
         } catch (RazorpayException e) {
             throw new RazorpayException(e.getMessage());
         }
     }
 
-    private static @NotNull JSONObject createPaymentLinkRequest(PaymentLinkRequestDto paymentLinkRequestDto, double price) {
-        JSONObject paymentLinkRequest = new JSONObject();
-        paymentLinkRequest.put("amount", price);
-        paymentLinkRequest.put("currency", "INR");
+    private static @NotNull JSONObject createRazorpayOrderRequest(OrderRequestDto orderRequestDto, double price) {
+        JSONObject rpOrderRequest = new JSONObject();
+        rpOrderRequest.put("amount", price);
+        rpOrderRequest.put("currency", currency);
 
-        JSONObject customer = new JSONObject();
-        customer.put("name", paymentLinkRequestDto.getCustomerName());
-        customer.put("email", paymentLinkRequestDto.getCustomerEmail());
+        JSONObject customerInfo = new JSONObject();
+        customerInfo.put("customer_name", orderRequestDto.getCustomerName());
+        customerInfo.put("customer_email", orderRequestDto.getCustomerEmail());
 
-        JSONObject notify = new JSONObject();
-        notify.put("sms", false);
-        notify.put("email", false);
-
-        paymentLinkRequest.put("customer", customer);
-        paymentLinkRequest.put("notify", notify);
-        paymentLinkRequest.put("callback_url", "http://18.212.182.224:8080/api/interconnected/test3");
-        paymentLinkRequest.put("callback_method", "get");
-        return paymentLinkRequest;
+        rpOrderRequest.put("notes", customerInfo);
+        return rpOrderRequest;
     }
 
     @PostMapping("redirect")
     @ResponseBody
-    public ResponseEntity<ApiResponse> redirect(@RequestParam(name="razorpay_payment_id") String paymentId,
-                                                @RequestParam(name="razorpay_payment_link_id") String paymentLinkId) throws RazorpayException {
+    public ResponseEntity<ApiResponse> redirect(@RequestParam(name="razorpay_order_id") String rpOrderId,
+                                                @RequestParam(name="razorpay_signature") String rpSignature) throws RazorpayException {
         try {
             RazorpayClient razorpayClient = new RazorpayClient(apiKey, apiSecret);
-            Payment payment = razorpayClient.payments.fetch(paymentId);
-            if(payment.get("status").equals("captured")) {
+            Order rpOrder = razorpayClient.orders.fetch(rpOrderId);
+            if(rpOrder.get("status").equals("paid")) {
                 // Save payment id for order
-                OrderEntity order = orderRepository.findByPaymentId(paymentLinkId).get();
+                OrderEntity order = orderRepository.findByRazorpayOrderId(rpOrderId)
+                        .orElseThrow(() -> new IllegalStateException("No order present"));
                 order.setPaymentStatus("COMPLETED");
                 order.setOrderStatus("PLACED");
                 orderRepository.save(order);
                 return new ResponseEntity<>(new ApiResponse("Order placed", true), HttpStatus.CREATED);
             }
-        } catch (RazorpayException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ApiResponse(e.getMessage(), false), HttpStatus.BAD_REQUEST);
         }
         return null;
     }
