@@ -50,7 +50,7 @@ public class OrderController {
 
     @PostMapping("pay")
     @ResponseBody
-    public ResponseEntity<OrderResponseDto> createPaymentLink(@RequestBody OrderRequestDto orderRequestDto) throws RazorpayException {
+    public ResponseEntity<OrderResponseDto> createRazorpayOrder(@RequestBody OrderRequestDto orderRequestDto) throws RazorpayException {
         if(!expertService.validateOrderRequest(orderRequestDto.getExpertId(), orderRequestDto.getServiceTimeslot()))
         {
             return new ResponseEntity<>(null, HttpStatus.NOT_ACCEPTABLE);
@@ -103,15 +103,16 @@ public class OrderController {
 
     @PostMapping("redirect")
     @ResponseBody
-    public ResponseEntity<ApiResponse> redirect(@RequestParam(name="razorpay_order_id") String rpOrderId,
-                                                @RequestParam(name="razorpay_signature") String rpSignature) throws RazorpayException {
+    public ResponseEntity<ApiResponse> redirect(@RequestParam(name="razorpay_payment_id") String paymentId)
+            throws Exception {
         try {
             RazorpayClient razorpayClient = new RazorpayClient(apiKey, apiSecret);
-            Order rpOrder = razorpayClient.orders.fetch(rpOrderId);
-            if(rpOrder.get("status").equals("paid")) {
+            Payment payment = razorpayClient.payments.fetch(paymentId);
+            if(payment.get("status").equals("captured")) {
                 // Save payment id for order
-                OrderEntity order = orderRepository.findByRazorpayOrderId(rpOrderId)
+                OrderEntity order = orderRepository.findByRazorpayOrderId(payment.get("order_id"))
                         .orElseThrow(() -> new IllegalStateException("No order present"));
+                order.setRazorpayPaymentId(paymentId);
                 order.setPaymentStatus("COMPLETED");
                 order.setOrderStatus("PLACED");
                 orderRepository.save(order);

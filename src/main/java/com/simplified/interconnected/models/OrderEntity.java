@@ -24,6 +24,8 @@ public class OrderEntity {
 
     private String razorpayOrderId;
 
+    private String razorpayPaymentId;
+
     @Column(nullable = false)
     private String customerEmail;
 

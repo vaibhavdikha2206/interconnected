@@ -43,6 +43,7 @@ CREATE TABLE expert_timeslot (
 CREATE TABLE Orders (
     id SERIAL PRIMARY KEY,
     razorpay_order_id VARCHAR(255),
+    razorpay_payment_id VARCHAR(255),
     customer_email VARCHAR(255) NOT NULL,
     cost DOUBLE PRECISION NOT NULL,
     currency VARCHAR(5) NOT NULL,
