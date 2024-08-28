@@ -68,6 +68,8 @@ public class OrderController {
 
             OrderResponseDto orderResponseDto = new OrderResponseDto();
             orderResponseDto.setRazorpayOrderId(rpOrder.get("id"));
+            orderResponseDto.setCurrency(currency);
+            orderResponseDto.setAmount(service.getPrice());
 
             OrderEntity order = new OrderEntity();
             order.setService(service);
@@ -90,7 +92,7 @@ public class OrderController {
 
     private static @NotNull JSONObject createRazorpayOrderRequest(OrderRequestDto orderRequestDto, double price) {
         JSONObject rpOrderRequest = new JSONObject();
-        rpOrderRequest.put("amount", price);
+        rpOrderRequest.put("amount", price*100);
         rpOrderRequest.put("currency", currency);
 
         JSONObject customerInfo = new JSONObject();
