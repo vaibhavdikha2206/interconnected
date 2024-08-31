@@ -40,18 +40,22 @@ CREATE TABLE expert_timeslot (
 );
 
 -- Create the orders table
-CREATE TABLE Orders (
+CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
-    payment_id VARCHAR(255),
-    customer_email VARCHAR(255) NOT NULL,
-    cost DOUBLE PRECISION NOT NULL,
-    order_timestamp TIMESTAMP NOT NULL SET DEFAULT CURRENT_TIMESTAMP,
-    payment_status VARCHAR(255) NOT NULL,
-    order_status VARCHAR(255) NOT NULL,
-    service_id BIGINT NOT NULL,
-    expert_id BIGINT NOT NULL,
-    service_timeslot TIMESTAMP NOT NULL;
-    FOREIGN KEY (service_id) REFERENCES Services(id)
+    razorpay_order_id character varying(255),
+    customer_email character varying(255) NOT NULL,
+    cost double precision NOT NULL,
+    order_timestamp timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    payment_status character varying(255) NOT NULL,
+    order_status character varying(255) NOT NULL,
+    service_id bigint NOT NULL,
+    service_timeslot timestamp without time zone NOT NULL,
+    expert_id bigint NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    currency character varying(10) NOT NULL,
+    razorpay_payment_id character varying(255),
+    FOREIGN KEY (service_id) REFERENCES Services(id),
     FOREIGN KEY (expert_id) REFERENCES Experts(id)
 );
 

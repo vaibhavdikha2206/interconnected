@@ -17,6 +17,10 @@ public class ExpertEntity {
 
     private String name;
 
+    private String organization;
+
+    private String thumbnail;
+
     @Column(columnDefinition = "TEXT")
     private String otherDetails;
 
