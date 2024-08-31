@@ -103,7 +103,7 @@ public class OrderController {
         return rpOrderRequest;
     }
 
-    @PostMapping("redirect")
+    @PostMapping("confirm")
     @ResponseBody
     public ResponseEntity<ApiResponse> redirect(@RequestParam(name="razorpay_payment_id") String paymentId)
             throws Exception {
