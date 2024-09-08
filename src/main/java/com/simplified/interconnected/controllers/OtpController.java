@@ -1,35 +1,37 @@
 package com.simplified.interconnected.controllers;
 
-import com.simplified.interconnected.service.OtpService;
+import com.simplified.interconnected.service.InfobipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/otp")
+@RequestMapping("/api/auth")
 public class OtpController {
 
     @Autowired
-    private OtpService otpService;
+    private InfobipService infobipService;
 
-    @Autowired
-    private OtpStorageService otpStorageService;
-
-    @PostMapping("/send")
+    // Generate and send OTP
+    @PostMapping("/send-otp")
     public String sendOtp(@RequestParam String phoneNumber) {
-        String otp = otpService.generateOtp();
-        otpService.sendOtp(phoneNumber, otp);
-        otpStorageService.storeOtp(phoneNumber, otp);
+        try {
+            infobipService.sendOtp(phoneNumber);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
         return "OTP sent successfully to " + phoneNumber;
     }
 
-    @PostMapping("/verify")
+    // Verify OTP
+    @PostMapping("/verify-otp")
     public String verifyOtp(@RequestParam String phoneNumber, @RequestParam String otp) {
-        String storedOtp = otpStorageService.getOtp(phoneNumber);
-        if (storedOtp != null && storedOtp.equals(otp)) {
-            otpStorageService.removeOtp(phoneNumber);
-            return "OTP verified successfully!";
-        } else {
-            return "Invalid OTP!";
+        try {
+            if (infobipService.verifyOTP(otp)) {
+                return "OTP verified successfully!";
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
+        return "Invalid OTP!";
     }
 }

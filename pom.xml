@@ -109,6 +109,13 @@
 			<artifactId>plivo-java</artifactId>
 			<version>5.44.0</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.infobip/infobip-api-java-client -->
+		<dependency>
+			<groupId>com.infobip</groupId>
+			<artifactId>infobip-api-java-client</artifactId>
+			<version>4.3.2</version>
+		</dependency>
+
 
 	</dependencies>
 
