@@ -14,24 +14,25 @@ public class OtpController {
     // Generate and send OTP
     @PostMapping("/send-otp")
     public String sendOtp(@RequestParam String phoneNumber) {
+        String pinId = null;
         try {
-            infobipService.sendOtp(phoneNumber);
+            pinId = infobipService.sendOtp(phoneNumber);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        return "OTP sent successfully to " + phoneNumber;
+        return pinId;
     }
 
     // Verify OTP
     @PostMapping("/verify-otp")
-    public String verifyOtp(@RequestParam String phoneNumber, @RequestParam String otp) {
+    public boolean verifyOtp(@RequestParam String pinId, @RequestParam String otp) {
         try {
-            if (infobipService.verifyOTP(otp)) {
-                return "OTP verified successfully!";
+            if (infobipService.verifyOTP(pinId, otp)) {
+                return true;
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        return "Invalid OTP!";
+        return false;
     }
 }
