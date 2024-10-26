@@ -1,6 +1,12 @@
 package com.simplified.interconnected.controllers;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.simplified.interconnected.dto.AuthResponseDTO;
+import com.simplified.interconnected.dto.GLoginDto;
 import com.simplified.interconnected.dto.LoginDto;
 import com.simplified.interconnected.dto.RegisterDto;
 import com.simplified.interconnected.models.Role;
@@ -8,6 +14,7 @@ import com.simplified.interconnected.models.UserEntity;
 import com.simplified.interconnected.repository.RoleRepository;
 import com.simplified.interconnected.repository.UserRepository;
 import com.simplified.interconnected.security.JWTGenerator;
+import com.simplified.interconnected.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +28,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Collections;
 
 @RestController
@@ -33,14 +42,17 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JWTGenerator jwtGenerator;
 
+    private final AuthService authService;
+
     @Autowired
     public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
-                          RoleRepository roleRepository, PasswordEncoder passwordEncoder, JWTGenerator jwtGenerator) {
+                          RoleRepository roleRepository, PasswordEncoder passwordEncoder, JWTGenerator jwtGenerator, AuthService authService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtGenerator = jwtGenerator;
+        this.authService = authService;
     }
 
     @PostMapping("login")
@@ -52,6 +64,11 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtGenerator.generateToken(authentication);
         return new ResponseEntity<>(new AuthResponseDTO(token), HttpStatus.OK);
+    }
+
+    @PostMapping("googleLogin")
+    public ResponseEntity<AuthResponseDTO> googleLogin(@RequestBody GLoginDto gloginDto) throws GeneralSecurityException, IOException {
+        return new ResponseEntity<>(authService.processGoogleCred(gloginDto), HttpStatus.OK);
     }
 
     @PostMapping("register")
@@ -72,3 +89,4 @@ public class AuthController {
         return new ResponseEntity<>("User registered success!", HttpStatus.OK);
     }
 }
+
