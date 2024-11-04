@@ -31,6 +31,7 @@ public class JWTGenerator {
 		System.out.println(token);
 		return token;
 	}
+
 	public String getUsernameFromJWT(String token){
 		Claims claims = Jwts.parserBuilder()
 				.setSigningKey(key)
@@ -50,6 +51,15 @@ public class JWTGenerator {
 		} catch (Exception ex) {
 			throw new AuthenticationCredentialsNotFoundException("JWT was exprired or incorrect",ex.fillInStackTrace());
 		}
+	}
+
+	public String generateToken(String username) {
+		return Jwts.builder()
+				.setSubject(username)
+				.setIssuedAt(new Date())
+				.setExpiration(new Date(System.currentTimeMillis() + 86400000))
+				.signWith(key, SignatureAlgorithm.HS512)
+				.compact();
 	}
 
 }

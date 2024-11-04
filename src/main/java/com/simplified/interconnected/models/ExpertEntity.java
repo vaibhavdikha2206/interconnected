@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "experts")
@@ -23,6 +24,13 @@ public class ExpertEntity {
 
     @Column(columnDefinition = "TEXT")
     private String otherDetails;
+
+    @ManyToMany
+    @JoinTable(
+            name = "expert_skill", joinColumns = @JoinColumn(name = "expert_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "skill_id", referencedColumnName = "id")
+    )
+    private Set<SkillEntity> skills;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "expert_service", joinColumns = @JoinColumn(name = "expert_id", referencedColumnName = "id"),

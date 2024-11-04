@@ -10,10 +10,17 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
+import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Configuration
 @EnableWebSecurity
@@ -32,8 +39,13 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(httpSecurityExceptionHandlingConfigurer -> httpSecurityExceptionHandlingConfigurer.authenticationEntryPoint(authEntryPoint))
                 .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests.requestMatchers("/api/**").permitAll().anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults());
+                .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests.requestMatchers("/api/auth/**").permitAll().anyRequest().authenticated())
+                .httpBasic(Customizer.withDefaults())
+                .oauth2Login((oauth2Login) -> oauth2Login
+                        .userInfoEndpoint((userInfo) -> userInfo
+                                .userAuthoritiesMapper(grantedAuthoritiesMapper())
+                        )
+                );;
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -52,5 +64,30 @@ public class SecurityConfig {
     @Bean
     public  JWTAuthenticationFilter jwtAuthenticationFilter() {
         return new JWTAuthenticationFilter();
+    }
+
+    private GrantedAuthoritiesMapper grantedAuthoritiesMapper() {
+        return (authorities) -> {
+            Set<GrantedAuthority> mappedAuthorities = new HashSet<>();
+
+            authorities.forEach((authority) -> {
+                GrantedAuthority mappedAuthority;
+
+                if (authority instanceof OidcUserAuthority userAuthority) {
+                    mappedAuthority = new OidcUserAuthority(
+                            "OIDC_USER", userAuthority.getIdToken(), userAuthority.getUserInfo());
+                } else if (authority instanceof OAuth2UserAuthority) {
+                    OAuth2UserAuthority userAuthority = (OAuth2UserAuthority) authority;
+                    mappedAuthority = new OAuth2UserAuthority(
+                            "OAUTH2_USER", userAuthority.getAttributes());
+                } else {
+                    mappedAuthority = authority;
+                }
+
+                mappedAuthorities.add(mappedAuthority);
+            });
+
+            return mappedAuthorities;
+        };
     }
 }
