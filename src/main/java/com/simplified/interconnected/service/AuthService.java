@@ -14,6 +14,9 @@ import com.simplified.interconnected.security.JWTGenerator;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -44,8 +48,11 @@ public class AuthService {
     public UserEntity registerUser(UserEntity user) {
         user.setEnabled(true);
         //user.setEmailVerified(false);
-        Role roles = roleRepository.findByName("OAUTH2_USER").get();
-        user.setRoles(Collections.singletonList(roles));
+        Optional<Role> optionalRole = roleRepository.findByName("OAUTH2_USER");
+        if(optionalRole.isPresent()){
+            Role roles = optionalRole.get();
+            user.setRoles(Collections.singletonList(roles));
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         userRepository.save(user);
@@ -99,7 +106,7 @@ public class AuthService {
         return null;
     }
 
-    public AuthResponseDTO processGoogleCred(GLoginDto gloginDto) throws GeneralSecurityException, IOException {
+    public AuthResponseDTO processGoogleCred(GLoginDto gloginDto) {
         UserEntity googleUser;
         try {
             googleUser = getProfileDetailsGoogle(gloginDto);
@@ -119,5 +126,14 @@ public class AuthService {
         }
 
         return saveGoogleToken(user.getUsername());
+    }
+
+    public AuthResponseDTO loginWithPassword(String username, String password) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        username, password));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String token = jwtGenerator.generateToken(authentication);
+        return new AuthResponseDTO(token);
     }
 }
