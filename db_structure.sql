@@ -11,7 +11,7 @@ CREATE TABLE Experts (
 -- we can remove end_time later on
 CREATE TABLE TimeSlots (
     id SERIAL PRIMARY KEY,
-    day_of_week VARCHAR(9) CHECK (day_of_week IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')),
+    day_of_week VARCHAR(9) CHECK (day_of_week IN ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY')),
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     CONSTRAINT check_start_end_time CHECK (start_time < end_time)

@@ -39,7 +39,10 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(httpSecurityExceptionHandlingConfigurer -> httpSecurityExceptionHandlingConfigurer.authenticationEntryPoint(authEntryPoint))
                 .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests.requestMatchers("/api/auth/**").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/order/**").authenticated() // Require authentication for orders
+                        .anyRequest().permitAll() // Allow all other requests
+                )
                 .httpBasic(Customizer.withDefaults())
                 .oauth2Login((oauth2Login) -> oauth2Login
                         .userInfoEndpoint((userInfo) -> userInfo
